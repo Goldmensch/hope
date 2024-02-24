@@ -1,6 +1,6 @@
 package io.github.madethoughts.hope.nbt.tree;
 
-public record TagShort(
+public record NbtTagShort(
         short value
-) implements Tag {
+) implements NbtTag {
 }

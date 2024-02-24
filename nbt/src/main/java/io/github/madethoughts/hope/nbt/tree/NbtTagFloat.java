@@ -1,6 +1,6 @@
 package io.github.madethoughts.hope.nbt.tree;
 
-public record TagFloat(
+public record NbtTagFloat(
         float value
-) implements Tag {
+) implements NbtTag {
 }

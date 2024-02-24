@@ -1,6 +1,6 @@
 package io.github.madethoughts.hope.nbt.tree;
 
-public record TagLongArray(
+public record NbtTagLongArray(
         long[] value
-) implements Tag {
+) implements NbtTag {
 }
