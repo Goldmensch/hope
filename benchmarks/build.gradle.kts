@@ -28,10 +28,11 @@ jmh {
             "async:output=jfr;dir=${project.layout.buildDirectory.asFile.get()}/results/async",
             "perfasm")
     )
+    resultFormat = "json"
 
-    fork = 1
-    iterations = 2
-    warmupIterations = 2
+    fork = 2
+    iterations = 4
+    warmupIterations = 3
     warmupForks = 0
 }
 
