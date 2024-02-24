@@ -21,7 +21,6 @@ import java.util.zip.GZIPOutputStream;
 @SuppressWarnings("unused")
 public class DeserializerBenchmark {
 
-
     @State(Scope.Benchmark)
     public static class DesState {
         public byte[] registryDataPackBytes;
@@ -54,18 +53,21 @@ public class DeserializerBenchmark {
     public CompoundBinaryTag adventure(DesState state) throws IOException {
         return BinaryTagIO.reader().read(new FastByteArrayInputStream(state.registryDataPackBytes));
     }
-
     @Benchmark
     public RootCompound hopeNbtCompressed(DesState state) {
         return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), Mode.FILE, new Compression(CompressionType.GZIP));
     }
 
     @Benchmark
+    public RootCompound hopeNbtCompressedFastUtil(DesState state) {
+        return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), Mode.FILE, new Compression(CompressionType.GZIP), FastUtilCustomization.INSTANCE);
+    }
+
+    @Benchmark
     public NBTCompound neditCompressed(DesState state) throws IOException {
         return NBTReader.read(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes));
     }
-
-        @Benchmark
+    @Benchmark
     public CompoundBinaryTag adventureCompressed(DesState state) throws IOException {
         return BinaryTagIO.reader().read(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), BinaryTagIO.Compression.GZIP);
     }

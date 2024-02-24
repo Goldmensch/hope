@@ -1,52 +1,59 @@
 package io.github.madethoughts.hope.nbt.deserialization;
 
 import io.github.madethoughts.hope.nbt.Compression;
+import io.github.madethoughts.hope.nbt.Customization;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.TagType;
 import io.github.madethoughts.hope.nbt.tree.*;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.zip.DeflaterInputStream;
-import java.util.zip.GZIPInputStream;
 
 public final class NbtDeserializer {
     private final Mode mode;
     private final DataInput in;
 
-    private NbtDeserializer(InputStream inputStream, Mode mode, Compression compression) {
+    private NbtDeserializer(InputStream inputStream, Mode mode, Compression compression, Customization customization) {
         try {
             Objects.requireNonNull(inputStream);
             Objects.requireNonNull(mode);
             Objects.requireNonNull(compression);
+            Objects.requireNonNull(customization);
 
             if (compression != Compression.NONE) {
                 inputStream = switch (compression.type()) {
-                    case GZIP -> new GZIPInputStream(inputStream);
-                    case ZLIB -> new DeflaterInputStream(inputStream);
+                    case GZIP -> customization.gzipInputStream(inputStream);
+                    case ZLIB -> customization.zlibInputStream(inputStream);
                 };
 
                 inputStream = compression.bufferSizeSet()
-                        ? new BufferedInputStream(inputStream, compression.bufferSize())
-                        : new BufferedInputStream(inputStream);
+                        ? customization.bufferedInputStream(inputStream, compression.bufferSize())
+                        : customization.bufferedInputStream(inputStream);
             }
-            this.in = new DataInputStream(inputStream);
+            this.in = customization.dataInput(inputStream);
 
             this.mode = mode;
         } catch (IOException e) {
             throw wrappedError(e);
         }
     }
+
+    public static RootCompound deserialize(InputStream inputStream, Mode mode, Compression compression, Customization customization) {
+        return new NbtDeserializer(inputStream, mode, compression, customization).deserializeBytes();
+    }
+
     public static RootCompound deserialize(InputStream inputStream, Mode mode, Compression compression) {
-        return new NbtDeserializer(inputStream, mode, compression).deserializeBytes();
+        return new NbtDeserializer(inputStream, mode, compression, Customization.DEFAULT).deserializeBytes();
     }
 
     public static RootCompound deserialize(InputStream inputStream, Mode mode) {
-        return new NbtDeserializer(inputStream, mode, Compression.NONE).deserializeBytes();
+        return new NbtDeserializer(inputStream, mode, Compression.NONE, Customization.DEFAULT).deserializeBytes();
     }
 
     private static NBTDeserializationException wrappedError(Exception e) {

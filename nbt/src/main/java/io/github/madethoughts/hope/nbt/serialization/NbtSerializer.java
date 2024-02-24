@@ -1,11 +1,11 @@
 package io.github.madethoughts.hope.nbt.serialization;
 
 import io.github.madethoughts.hope.nbt.Compression;
+import io.github.madethoughts.hope.nbt.Customization;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.TagType;
 import io.github.madethoughts.hope.nbt.tree.*;
 
-import java.io.BufferedOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static java.util.FormatProcessor.FMT;
@@ -24,24 +23,25 @@ public final class NbtSerializer {
     private final Mode mode;
     private final DataOutput out;
 
-    private NbtSerializer(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression) {
+    private NbtSerializer(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression, Customization customization) {
         try {
             Objects.requireNonNull(outputStream);
             Objects.requireNonNull(tree);
             Objects.requireNonNull(mode);
             Objects.requireNonNull(compression);
+            Objects.requireNonNull(customization);
 
             if (compression != Compression.NONE) {
                 outputStream = switch (compression.type()) {
-                    case GZIP -> new GZIPOutputStream(outputStream);
-                    case ZLIB -> new DeflaterOutputStream(outputStream);
+                    case GZIP -> customization.gzipOutputStream(outputStream);
+                    case ZLIB -> customization.zlibOutputStream(outputStream);
                 };
 
                 outputStream = compression.bufferSizeSet()
-                        ? new BufferedOutputStream(outputStream, compression.bufferSize())
-                        : new BufferedOutputStream(outputStream);
+                        ? customization.bufferedOutputStream(outputStream, compression.bufferSize())
+                        : customization.bufferedOutputStream(outputStream);
             }
-            this.out = new FastDataOutputStream(outputStream);
+            this.out = customization.dataOutput(outputStream);
 
             this.tree = tree;
             this.mode = mode;
@@ -50,12 +50,16 @@ public final class NbtSerializer {
         }
     }
 
+    public static void serialize(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression, Customization customization) {
+        new NbtSerializer(outputStream, tree, mode, compression, customization).serializeTree();
+    }
+
     public static void serialize(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression) {
-        new NbtSerializer(outputStream, tree, mode, compression).serializeTree();
+        new NbtSerializer(outputStream, tree, mode, compression, Customization.DEFAULT).serializeTree();
     }
 
     public static void serialize(OutputStream outputStream, RootCompound tree, Mode mode) {
-        new NbtSerializer(outputStream, tree, mode, Compression.NONE).serializeTree();
+        new NbtSerializer(outputStream, tree, mode, Compression.NONE, Customization.DEFAULT).serializeTree();
     }
 
     private static NBTSerializationException wrappedError(Exception e) {

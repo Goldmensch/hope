@@ -69,13 +69,20 @@ public class SerializerBenchmark {
     }
 
     @Benchmark
+    public byte[] hopeNbtCompressedFastUtil(SerState state) {
+        FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
+        NbtSerializer.serialize(outputStream, state.hopeNbt, Mode.FILE, new Compression(CompressionType.GZIP), FastUtilCustomization.INSTANCE);
+        return outputStream.array;
+    }
+
+    @Benchmark
     public byte[] neditCompressed(SerState state) throws IOException {
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
         NBTWriter.write(state.neditNbt, outputStream, true);
         return outputStream.array;
     }
 
-        @Benchmark
+    @Benchmark
     public byte[] adventureNbtCompressed(SerState state) throws IOException {
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
         BinaryTagIO.writer().write(state.adventureNbt, outputStream, BinaryTagIO.Compression.GZIP);
