@@ -23,15 +23,15 @@ val ENABLE_PREVIEW = listOf(
 )
 
 jmh {
-    jvmArgs.set(listOf(
-            "--enable-preview"
-    ))
-
-    profilers.add("async:o=flamegraph")
+    jvmArgs.set(ENABLE_PREVIEW)
+    profilers.set(listOf(
+            "async:output=jfr;dir=${project.layout.buildDirectory.asFile.get()}/results/async",
+            "perfasm")
+    )
 
     fork = 1
-    iterations = 4
-    warmupIterations = 3
+    iterations = 2
+    warmupIterations = 2
     warmupForks = 0
 }
 

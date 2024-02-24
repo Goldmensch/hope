@@ -10,7 +10,7 @@
     ...
   } @ inputs:
     flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
+      systems = ["x86_64-linux"];
 
       perSystem = {
         config,
@@ -23,11 +23,25 @@
 
         jdk = pkgs."temurin-bin-${toString javaVersion}";
         gradle = pkgs.gradle.override { java = jdk; };
-        profilers = with pkgs; [ async-profiler ];
+
+        hsdis = pkgs.stdenv.mkDerivation {
+            name = "hsdis";
+            src = pkgs.fetchurl {
+                url = "https://chriswhocodes.com/hsdis/hsdis-amd64.so";
+                hash = "sha256-Lr0Tyg3Qo/IMSbmcErcuN2tsNxl19zRAMEjd89e1FQc=";
+            };
+            phases = [ "installPhase" ];
+
+            installPhase = ''
+              mkdir -p $out/lib
+              ln -s $src $out/lib/hsdis-amd64.so
+            '';
+        };
+        profilers = with pkgs; [ async-profiler ] ++ [ hsdis];
        in {
          devShells.default = pkgs.mkShell {
            name = "hope";
-           packages = with pkgs; [git gradle jdk ] ++ profilers;
+           packages = with pkgs; [git gradle jdk linuxPackages_latest.perf ] ++ profilers;
 
            shellHook = ''
              export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${lib.makeLibraryPath profilers}"
