@@ -1,5 +1,7 @@
 package nbt;
 
+import io.github.madethoughts.hope.nbt.Compression;
+import io.github.madethoughts.hope.nbt.CompressionType;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.deserialization.NbtDeserializer;
 import io.github.madethoughts.hope.nbt.serialization.NbtSerializer;
@@ -21,7 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @SuppressWarnings("unused")
-public class SerializerBenchmark {
+public class SerializerCompressedBenchmark {
 
     @State(Scope.Benchmark)
     public static class SerState {
@@ -39,23 +41,30 @@ public class SerializerBenchmark {
     }
 
     @Benchmark
-    public byte[] hopeNbt(SerState state) {
+    public byte[] hopeNbtCompressed(SerState state) {
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
-        NbtSerializer.serialize(outputStream, state.hopeNbt, Mode.FILE);
+        NbtSerializer.serialize(outputStream, state.hopeNbt, Mode.FILE, new Compression(CompressionType.GZIP));
         return outputStream.array;
     }
 
     @Benchmark
-    public byte[] nedit(SerState state) throws IOException {
+    public byte[] hopeNbtCompressedFastUtil(SerState state) {
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
-        NBTWriter.write(state.neditNbt, outputStream, false);
+        NbtSerializer.serialize(outputStream, state.hopeNbt, Mode.FILE, new Compression(CompressionType.GZIP), FastUtilCustomization.INSTANCE);
         return outputStream.array;
     }
 
     @Benchmark
-    public byte[] adventureNbt(SerState state) throws IOException {
+    public byte[] neditCompressed(SerState state) throws IOException {
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
-        BinaryTagIO.writer().write(state.adventureNbt, outputStream);
+        NBTWriter.write(state.neditNbt, outputStream, true);
+        return outputStream.array;
+    }
+
+    @Benchmark
+    public byte[] adventureNbtCompressed(SerState state) throws IOException {
+        FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
+        BinaryTagIO.writer().write(state.adventureNbt, outputStream, BinaryTagIO.Compression.GZIP);
         return outputStream.array;
     }
 }

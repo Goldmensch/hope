@@ -1,5 +1,7 @@
 package nbt;
 
+import io.github.madethoughts.hope.nbt.Compression;
+import io.github.madethoughts.hope.nbt.CompressionType;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.deserialization.NbtDeserializer;
 import io.github.madethoughts.hope.nbt.tree.RootCompound;
@@ -17,7 +19,7 @@ import java.nio.file.Path;
 import java.util.zip.GZIPOutputStream;
 
 @SuppressWarnings("unused")
-public class DeserializerBenchmark {
+public class DeserializerCompressedBenchmark {
 
     @State(Scope.Benchmark)
     public static class DesState {
@@ -36,19 +38,22 @@ public class DeserializerBenchmark {
             }
         }
     }
-
     @Benchmark
-    public RootCompound hopeNbt(DesState state) {
-        return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.registryDataPackBytes), Mode.FILE);
+    public RootCompound hopeNbtCompressed(DesState state) {
+        return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), Mode.FILE, new Compression(CompressionType.GZIP));
     }
 
     @Benchmark
-    public NBTCompound nedit(DesState state) throws IOException {
-        return NBTReader.read(new FastByteArrayInputStream(state.registryDataPackBytes));
+    public RootCompound hopeNbtCompressedFastUtil(DesState state) {
+        return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), Mode.FILE, new Compression(CompressionType.GZIP), FastUtilCustomization.INSTANCE);
     }
 
     @Benchmark
-    public CompoundBinaryTag adventure(DesState state) throws IOException {
-        return BinaryTagIO.reader().read(new FastByteArrayInputStream(state.registryDataPackBytes));
+    public NBTCompound neditCompressed(DesState state) throws IOException {
+        return NBTReader.read(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes));
+    }
+    @Benchmark
+    public CompoundBinaryTag adventureCompressed(DesState state) throws IOException {
+        return BinaryTagIO.reader().read(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), BinaryTagIO.Compression.GZIP);
     }
 }
