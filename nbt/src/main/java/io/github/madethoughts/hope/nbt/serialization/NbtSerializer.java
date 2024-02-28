@@ -1,9 +1,6 @@
 package io.github.madethoughts.hope.nbt.serialization;
 
-import io.github.madethoughts.hope.nbt.Compression;
-import io.github.madethoughts.hope.nbt.Customization;
-import io.github.madethoughts.hope.nbt.Mode;
-import io.github.madethoughts.hope.nbt.TagType;
+import io.github.madethoughts.hope.nbt.*;
 import io.github.madethoughts.hope.nbt.internal.tree.*;
 import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
 import io.github.madethoughts.hope.nbt.tree.NbtTag;
@@ -31,10 +28,11 @@ public final class NbtSerializer {
             Objects.requireNonNull(compression);
             Objects.requireNonNull(customization);
 
-            if (compression != Compression.NONE) {
+            if (compression.type() != CompressionType.NONE) {
                 outputStream = switch (compression.type()) {
                     case GZIP -> customization.gzipOutputStream(outputStream);
                     case ZLIB -> customization.zlibOutputStream(outputStream);
+                    default -> throw new IllegalStateException("Cannot reach this point");
                 };
 
                 outputStream = compression.bufferSizeSet()

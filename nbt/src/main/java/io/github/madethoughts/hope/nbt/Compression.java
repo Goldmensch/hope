@@ -7,7 +7,9 @@ public record Compression(
         int bufferSize
 ) {
 
-    public static final Compression NONE = new Compression(CompressionType.GZIP, -1);
+    public static final Compression NONE = new Compression(CompressionType.NONE);
+    public static final Compression GZIP = new Compression(CompressionType.GZIP);
+    public static final Compression ZLIB = new Compression(CompressionType.ZLIB);
 
     public Compression {
         Objects.requireNonNull(type);

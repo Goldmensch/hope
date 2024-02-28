@@ -1,9 +1,6 @@
 package io.github.madethoughts.hope.nbt.deserialization;
 
-import io.github.madethoughts.hope.nbt.Compression;
-import io.github.madethoughts.hope.nbt.Customization;
-import io.github.madethoughts.hope.nbt.Mode;
-import io.github.madethoughts.hope.nbt.TagType;
+import io.github.madethoughts.hope.nbt.*;
 import io.github.madethoughts.hope.nbt.internal.tree.*;
 import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
 import io.github.madethoughts.hope.nbt.tree.NbtTag;
@@ -29,10 +26,11 @@ public final class NbtDeserializer {
             Objects.requireNonNull(compression);
             Objects.requireNonNull(customization);
 
-            if (compression != Compression.NONE) {
+            if (compression.type() != CompressionType.NONE) {
                 inputStream = switch (compression.type()) {
                     case GZIP -> customization.gzipInputStream(inputStream);
                     case ZLIB -> customization.zlibInputStream(inputStream);
+                    default -> throw new IllegalStateException("Cannot reach this point");
                 };
 
                 inputStream = compression.bufferSizeSet()

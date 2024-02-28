@@ -1,5 +1,4 @@
 import io.github.madethoughts.hope.nbt.Compression;
-import io.github.madethoughts.hope.nbt.CompressionType;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.serialization.NbtSerializer;
 import net.kyori.adventure.nbt.BinaryTagIO;
@@ -25,7 +24,7 @@ public class SerializerTest {
     @Test
     public void testGzip() throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        NbtSerializer.serialize(outputStream, Constants.HOPE_NBT, Mode.FILE, new Compression(CompressionType.GZIP));
+        NbtSerializer.serialize(outputStream, Constants.HOPE_NBT, Mode.FILE, Compression.GZIP);
 
         var read = BinaryTagIO.reader().readNamed(new ByteArrayInputStream(outputStream.toByteArray()), BinaryTagIO.Compression.GZIP);
         Assertions.assertEquals(Constants.ADV_NBT_NAMED, read);
@@ -34,7 +33,7 @@ public class SerializerTest {
     @Test
     public void testZlib() throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        NbtSerializer.serialize(outputStream, Constants.HOPE_NBT, Mode.FILE, new Compression(CompressionType.ZLIB));
+        NbtSerializer.serialize(outputStream, Constants.HOPE_NBT, Mode.FILE, Compression.ZLIB);
 
         var read = BinaryTagIO.reader().readNamed(new ByteArrayInputStream(outputStream.toByteArray()), BinaryTagIO.Compression.ZLIB);
         Assertions.assertEquals(Constants.ADV_NBT_NAMED, read);
