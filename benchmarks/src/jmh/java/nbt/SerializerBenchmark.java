@@ -11,6 +11,8 @@ import me.nullicorn.nedit.NBTWriter;
 import me.nullicorn.nedit.type.NBTCompound;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
+import org.jglrxavpok.hephaistos.nbt.NBT;
+import org.jglrxavpok.hephaistos.nbt.NBTException;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -29,12 +31,15 @@ public class SerializerBenchmark {
         public NBTCompound neditNbt;
         public CompoundBinaryTag adventureNbt;
 
+        public NBT hepahistosNbt;
+
         @Setup
-        public void setup() throws IOException {
+        public void setup() throws IOException, NBTException {
             var registryDataPackBytes = Files.readAllBytes(Path.of("src/jmh/resources/sample.nbt"));
             hopeNbt = NbtDeserializer.deserialize(new FastByteArrayInputStream(registryDataPackBytes), Mode.FILE);
             neditNbt = NBTReader.read(new FastByteArrayInputStream(registryDataPackBytes));
             adventureNbt = BinaryTagIO.reader().read(new FastByteArrayInputStream(registryDataPackBytes));
+            hepahistosNbt = new org.jglrxavpok.hephaistos.nbt.NBTReader(new FastByteArrayInputStream(registryDataPackBytes)).read();
         }
     }
 
@@ -42,6 +47,15 @@ public class SerializerBenchmark {
     public byte[] hopeNbt(SerState state) {
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
         NbtSerializer.serialize(outputStream, state.hopeNbt, Mode.FILE);
+        return outputStream.array;
+    }
+
+    @Benchmark
+    public byte[] hephaistosNbt(SerState state) throws IOException {
+        FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
+        try(var writer = new org.jglrxavpok.hephaistos.nbt.NBTWriter(outputStream)) {
+            writer.writeRaw(state.hepahistosNbt);
+        }
         return outputStream.array;
     }
 

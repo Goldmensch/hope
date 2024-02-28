@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":nbt"))
     implementation("me.nullicorn", "Nedit", "2.2.0")
     implementation("net.kyori", "adventure-nbt", "4.16.0")
+    implementation("io.github.jglrxavpok.hephaistos", "common", "2.2.0")
 
     implementation("it.unimi.dsi:fastutil:8.5.13")
 }
@@ -23,6 +24,7 @@ val ENABLE_PREVIEW = listOf(
 )
 
 jmh {
+//    includes = listOf("DeserializerBenchmark")
     jvmArgs.set(ENABLE_PREVIEW)
     profilers.set(listOf(
             "async:output=jfr;dir=${project.layout.buildDirectory.asFile.get()}/results/async",
@@ -32,7 +34,8 @@ jmh {
     )
     resultFormat = "json"
 
-    fork = 2
+    fork = 1
+    // fork = 2
     iterations = 4
     warmupIterations = 3
     warmupForks = 0

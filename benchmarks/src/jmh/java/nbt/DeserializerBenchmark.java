@@ -9,6 +9,8 @@ import me.nullicorn.nedit.NBTReader;
 import me.nullicorn.nedit.type.NBTCompound;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
+import org.jglrxavpok.hephaistos.nbt.NBT;
+import org.jglrxavpok.hephaistos.nbt.NBTException;
 import org.openjdk.jmh.annotations.*;
 
 import java.io.IOException;
@@ -40,6 +42,13 @@ public class DeserializerBenchmark {
     @Benchmark
     public NbtRootCompound hopeNbt(DesState state) {
         return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.registryDataPackBytes), Mode.FILE);
+    }
+
+    @Benchmark
+    public NBT hephaistosNbt(DesState state) throws NBTException, IOException {
+        try(var reader = new org.jglrxavpok.hephaistos.nbt.NBTReader(new FastByteArrayInputStream(state.registryDataPackBytes))) {
+            return reader.read();
+        }
     }
 
     @Benchmark
