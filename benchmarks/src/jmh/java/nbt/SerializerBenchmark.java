@@ -3,7 +3,7 @@ package nbt;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.deserialization.NbtDeserializer;
 import io.github.madethoughts.hope.nbt.serialization.NbtSerializer;
-import io.github.madethoughts.hope.nbt.tree.RootCompound;
+import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 import me.nullicorn.nedit.NBTReader;
@@ -25,13 +25,13 @@ public class SerializerBenchmark {
 
     @State(Scope.Benchmark)
     public static class SerState {
-        public RootCompound hopeNbt;
+        public NbtRootCompound hopeNbt;
         public NBTCompound neditNbt;
         public CompoundBinaryTag adventureNbt;
 
         @Setup
         public void setup() throws IOException {
-            var registryDataPackBytes = Files.readAllBytes(Path.of("src/jmh/resources/registry-data-packet.nbt"));
+            var registryDataPackBytes = Files.readAllBytes(Path.of("src/jmh/resources/sample.nbt"));
             hopeNbt = NbtDeserializer.deserialize(new FastByteArrayInputStream(registryDataPackBytes), Mode.FILE);
             neditNbt = NBTReader.read(new FastByteArrayInputStream(registryDataPackBytes));
             adventureNbt = BinaryTagIO.reader().read(new FastByteArrayInputStream(registryDataPackBytes));

@@ -5,7 +5,7 @@ import io.github.madethoughts.hope.nbt.CompressionType;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.deserialization.NbtDeserializer;
 import io.github.madethoughts.hope.nbt.serialization.NbtSerializer;
-import io.github.madethoughts.hope.nbt.tree.RootCompound;
+import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 import me.nullicorn.nedit.NBTReader;
@@ -27,7 +27,7 @@ public class SerializerCompressedBenchmark {
 
     @State(Scope.Benchmark)
     public static class SerState {
-        public RootCompound hopeNbt;
+        public NbtRootCompound hopeNbt;
         public NBTCompound neditNbt;
         public CompoundBinaryTag adventureNbt;
 

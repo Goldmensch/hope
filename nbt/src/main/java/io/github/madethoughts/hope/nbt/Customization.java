@@ -3,7 +3,10 @@ package io.github.madethoughts.hope.nbt;
 import io.github.madethoughts.hope.nbt.serialization.FastDataOutputStream;
 
 import java.io.*;
-import java.util.zip.*;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.InflaterInputStream;
 
 public class Customization {
 
@@ -41,11 +44,11 @@ public class Customization {
         return new DeflaterOutputStream(stream);
     }
 
-    public DataInput dataInput(InputStream stream) {
+    public DataInputStream dataInput(InputStream stream) {
         return new DataInputStream(stream);
     }
 
-    public DataOutput dataOutput(OutputStream stream) {
+    public DataOutputStream dataOutput(OutputStream stream) {
         return new FastDataOutputStream(stream);
     }
 

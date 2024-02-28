@@ -1,14 +1,24 @@
 package io.github.madethoughts.hope.nbt.tree;
 
-import java.util.Collections;
+import io.github.madethoughts.hope.nbt.internal.tree.NbtTagCompoundImpl;
+
 import java.util.Map;
 
-public record NbtTagCompound(
-        Map<String, NbtTag> values
-) implements NbtTag {
+public sealed interface NbtTagCompound extends NbtTag permits NbtTagCompoundImpl {
 
-    @Override
-    public Map<String, NbtTag> values() {
-        return Collections.unmodifiableMap(values);
+    static NbtTagCompound ofMap(Map<String, NbtTag> map) {
+        return new NbtTagCompoundImpl(map);
+    }
+
+    static NbtTagCompoundBuilder builder() {
+        return new NbtTagCompoundImpl.NbtTagCompoundBuilder();
+    }
+
+    Map<String, NbtTag> value();
+
+    interface NbtTagCompoundBuilder {
+        NbtTagCompoundBuilder put(String name, NbtTag tag);
+
+        NbtTagCompound build();
     }
 }

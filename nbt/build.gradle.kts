@@ -1,6 +1,5 @@
 plugins {
     id("java")
-    application
 }
 
 group = "io.github.madethoughts.hope"
@@ -11,6 +10,12 @@ repositories {
 }
 
 dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+
+    implementation("net.kyori", "adventure-nbt", "4.16.0")
+
+    testImplementation("it.unimi.dsi:fastutil:8.5.13")
 }
 
 
@@ -23,11 +28,6 @@ java {
 val ENABLE_PREVIEW = listOf(
         "--enable-preview"
 )
-application {
-    mainModule.set("io.github.madethoughts.hope")
-    mainClass.set("io.github.madethoughts.hope.Application")
-    applicationDefaultJvmArgs = ENABLE_PREVIEW
-}
 
 tasks {
     compileJava {
@@ -35,7 +35,12 @@ tasks {
         modularity.inferModulePath.set(true)
     }
 
+    compileTestJava {
+        options.compilerArgs = ENABLE_PREVIEW
+    }
+
     test {
         useJUnitPlatform()
+        jvmArgs = ENABLE_PREVIEW
     }
 }

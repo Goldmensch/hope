@@ -4,7 +4,7 @@ import io.github.madethoughts.hope.nbt.Compression;
 import io.github.madethoughts.hope.nbt.CompressionType;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.deserialization.NbtDeserializer;
-import io.github.madethoughts.hope.nbt.tree.RootCompound;
+import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 import me.nullicorn.nedit.NBTReader;
@@ -39,12 +39,12 @@ public class DeserializerCompressedBenchmark {
         }
     }
     @Benchmark
-    public RootCompound hopeNbtCompressed(DesState state) {
+    public NbtRootCompound hopeNbtCompressed(DesState state) {
         return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), Mode.FILE, new Compression(CompressionType.GZIP));
     }
 
     @Benchmark
-    public RootCompound hopeNbtCompressedFastUtil(DesState state) {
+    public NbtRootCompound hopeNbtCompressedFastUtil(DesState state) {
         return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.compressedRegistryDataPackBytes), Mode.FILE, new Compression(CompressionType.GZIP), FastUtilCustomization.INSTANCE);
     }
 

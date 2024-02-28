@@ -1,6 +1,7 @@
 package io.github.madethoughts.hope.nbt;
 
-import io.github.madethoughts.hope.nbt.tree.*;
+import io.github.madethoughts.hope.nbt.internal.tree.*;
+import io.github.madethoughts.hope.nbt.tree.NbtTag;
 
 public enum TagType {
     END(0),
@@ -44,18 +45,18 @@ public enum TagType {
 
     public static TagType byTagClass(NbtTag tag) {
         return switch (tag) {
-            case NbtTagByte _ -> BYTE;
-            case NbtTagShort _ -> SHORT;
-            case NbtTagInt _ -> INT;
-            case NbtTagLong _ -> LONG;
-            case NbtTagFloat _ -> FLOAT;
-            case NbtTagDouble _ -> DOUBLE;
-            case NbtTagByteArray _ -> BYTE_ARRAY;
-            case NbtTagString _ -> STRING;
-            case NbtTagList<?> _ -> LIST;
-            case NbtTagCompound _ -> COMPOUND;
-            case NbtTagIntArray _ -> INT_ARRAY;
-            case NbtTagLongArray _ -> LONG_ARRAY;
+            case NbtTagByteImpl _ -> BYTE;
+            case NbtTagShortImpl _ -> SHORT;
+            case NbtTagIntImpl _ -> INT;
+            case NbtTagLongImpl _ -> LONG;
+            case NbtTagFloatImpl _ -> FLOAT;
+            case NbtTagDoubleImpl _ -> DOUBLE;
+            case NbtTagByteArrayImpl _ -> BYTE_ARRAY;
+            case NbtTagStringImpl _ -> STRING;
+            case NbtTagListImpl<?> _ -> LIST;
+            case NbtTagCompoundImpl _ -> COMPOUND;
+            case NbtTagIntArrayImpl _ -> INT_ARRAY;
+            case NbtTagLongArrayImpl _ -> LONG_ARRAY;
         };
     }
 

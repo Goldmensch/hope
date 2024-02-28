@@ -26,7 +26,9 @@ jmh {
     jvmArgs.set(ENABLE_PREVIEW)
     profilers.set(listOf(
             "async:output=jfr;dir=${project.layout.buildDirectory.asFile.get()}/results/async",
-            "perfasm")
+            "perfasm",
+            "perf"
+    )
     )
     resultFormat = "json"
 

@@ -4,26 +4,26 @@ import io.github.madethoughts.hope.nbt.Compression;
 import io.github.madethoughts.hope.nbt.Customization;
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.TagType;
-import io.github.madethoughts.hope.nbt.tree.*;
+import io.github.madethoughts.hope.nbt.internal.tree.*;
+import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
+import io.github.madethoughts.hope.nbt.tree.NbtTag;
 
-import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteOrder;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.zip.GZIPOutputStream;
-
-import static java.util.FormatProcessor.FMT;
 
 public final class NbtSerializer {
-    private final RootCompound tree;
+    private final NbtRootCompound tree;
     private final Mode mode;
-    private final DataOutput out;
+    private final DataOutputStream out;
 
-    private NbtSerializer(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression, Customization customization) {
+    private NbtSerializer(OutputStream outputStream, NbtRootCompound tree, Mode mode, Compression compression, Customization customization) {
         try {
             Objects.requireNonNull(outputStream);
             Objects.requireNonNull(tree);
@@ -50,15 +50,15 @@ public final class NbtSerializer {
         }
     }
 
-    public static void serialize(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression, Customization customization) {
+    public static void serialize(OutputStream outputStream, NbtRootCompound tree, Mode mode, Compression compression, Customization customization) {
         new NbtSerializer(outputStream, tree, mode, compression, customization).serializeTree();
     }
 
-    public static void serialize(OutputStream outputStream, RootCompound tree, Mode mode, Compression compression) {
+    public static void serialize(OutputStream outputStream, NbtRootCompound tree, Mode mode, Compression compression) {
         new NbtSerializer(outputStream, tree, mode, compression, Customization.DEFAULT).serializeTree();
     }
 
-    public static void serialize(OutputStream outputStream, RootCompound tree, Mode mode) {
+    public static void serialize(OutputStream outputStream, NbtRootCompound tree, Mode mode) {
         new NbtSerializer(outputStream, tree, mode, Compression.NONE, Customization.DEFAULT).serializeTree();
     }
 
@@ -66,66 +66,54 @@ public final class NbtSerializer {
         return new NBTSerializationException("Unexpected error during tree processing.", e);
     }
 
-    private NBTSerializationException errorArrayToBig() {
-        return new NBTSerializationException("array is to big");
-    }
-
     private void serializeTree() {
-        try {
+        try (out) {
             switch (mode) {
                 case NETWORK -> out.write(TagType.COMPOUND.id());
                 case FILE -> {
                     out.write(TagType.COMPOUND.id());
-                    writeString(tree.name());
+                    out.writeUTF(tree.name());
                 }
             }
 
             write(tree.compound());
-
-            if (out instanceof GZIPOutputStream gzipOutputStream) {
-                gzipOutputStream.finish();
-            }
         } catch (IOException ioException) {
             throw wrappedError(ioException);
         }
     }
 
-    // faster than DataOutStream#writeUtf
-    private void writeString(String value) throws IOException {
-        var bytes = value.getBytes(StandardCharsets.UTF_8);
-        if (bytes.length > Short.MAX_VALUE)
-            throw new NBTSerializationException(FMT."String length exceed maximum of \{Short.MAX_VALUE}");
-        out.writeChar((char) bytes.length);
+    private void writeBytes(int size, byte[] bytes) throws IOException {
+        out.writeInt(size);
         out.write(bytes);
     }
 
     private void write(NbtTag current) {
         try {
             switch (current) {
-                case NbtTagCompound(Map<String, NbtTag> tags) -> {
+                case NbtTagCompoundImpl(Map<String, NbtTag> tags) -> {
                     for (var entry : tags.entrySet()) {
                         String name = entry.getKey();
                         NbtTag wrappedNbtTag = entry.getValue();
 
                         out.write(TagType.byTagClass(wrappedNbtTag).id());
-                        writeString(name);
+                        out.writeUTF(name);
                         write(wrappedNbtTag);
                     }
 
                     out.write(TagType.END.id());
                 }
-                case NbtTagByte(byte value) -> out.write(value);
-                case NbtTagShort(short value) -> out.writeShort(value);
-                case NbtTagInt(int value) -> out.writeInt(value);
-                case NbtTagLong(long value) -> out.writeLong(value);
-                case NbtTagFloat(float value) -> out.writeFloat(value);
-                case NbtTagDouble(double value) -> out.writeDouble(value);
-                case NbtTagByteArray(byte[] value) -> {
-                    out.writeInt(value.length);
-                    out.write(value);
+                case NbtTagByteImpl(byte value) -> out.write(value);
+                case NbtTagShortImpl(short value) -> out.writeShort(value);
+                case NbtTagIntImpl(int value) -> out.writeInt(value);
+                case NbtTagLongImpl(long value) -> out.writeLong(value);
+                case NbtTagFloatImpl(float value) -> out.writeFloat(value);
+                case NbtTagDoubleImpl(double value) -> out.writeDouble(value);
+                case NbtTagByteArrayImpl tag -> {
+                    byte[] value = tag.valueUnsafe();
+                    writeBytes(value.length, value);
                 }
-                case NbtTagString(String value) -> writeString(value);
-                case NbtTagList(List<? extends NbtTag> nbtTags) -> {
+                case NbtTagStringImpl(String value) -> out.writeUTF(value);
+                case NbtTagListImpl(List<? extends NbtTag> nbtTags) -> {
                     byte id = (byte) (nbtTags.isEmpty()
                             ? TagType.END.id()
                             : TagType.byTagClass(nbtTags.getFirst()).id());
@@ -134,21 +122,21 @@ public final class NbtSerializer {
                     out.writeInt(nbtTags.size());
                     nbtTags.forEach(this::write);
                 }
-                case NbtTagIntArray(int[] value) -> {
-                    if (((long) value.length * Integer.BYTES > Integer.MAX_VALUE)) throw errorArrayToBig();
-                    out.writeInt(value.length);
-
-                    ByteBuffer buffer = ByteBuffer.allocate(value.length * Integer.BYTES);
-                    buffer.asIntBuffer().put(value);
-                    out.write(buffer.array());
+                case NbtTagIntArrayImpl tag -> {
+                    int[] integers = tag.valueUnsafe();
+                    byte[] bytes = new byte[integers.length * Integer.BYTES];
+                    MemorySegment.copy(MemorySegment.ofArray(integers), ValueLayout.JAVA_INT_UNALIGNED, 0,
+                            MemorySegment.ofArray(bytes), ValueLayout.JAVA_INT_UNALIGNED.withOrder(ByteOrder.BIG_ENDIAN), 0,
+                            integers.length);
+                    writeBytes(integers.length, bytes);
                 }
-                case NbtTagLongArray(long[] value) -> {
-                    if (((long) value.length * Long.BYTES > Integer.MAX_VALUE)) throw errorArrayToBig();
-                    out.writeInt(value.length);
-
-                    ByteBuffer buffer = ByteBuffer.allocate(value.length * Long.BYTES);
-                    buffer.asLongBuffer().put(value);
-                    out.write(buffer.array());
+                case NbtTagLongArrayImpl tag -> {
+                    long[] longs = tag.valueUnsafe();
+                    byte[] bytes = new byte[longs.length * Long.BYTES];
+                    MemorySegment.copy(MemorySegment.ofArray(longs), ValueLayout.JAVA_LONG_UNALIGNED, 0,
+                            MemorySegment.ofArray(bytes), ValueLayout.JAVA_LONG_UNALIGNED.withOrder(ByteOrder.BIG_ENDIAN), 0,
+                            longs.length);
+                    writeBytes(longs.length, bytes);
                 }
             }
         } catch (IOException e) {

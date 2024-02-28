@@ -2,7 +2,7 @@ package nbt;
 
 import io.github.madethoughts.hope.nbt.Mode;
 import io.github.madethoughts.hope.nbt.deserialization.NbtDeserializer;
-import io.github.madethoughts.hope.nbt.tree.RootCompound;
+import io.github.madethoughts.hope.nbt.tree.NbtRootCompound;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 import me.nullicorn.nedit.NBTReader;
@@ -26,7 +26,7 @@ public class DeserializerBenchmark {
 
         @Setup(Level.Trial)
         public void setup() throws IOException {
-            this.registryDataPackBytes = Files.readAllBytes(Path.of("src/jmh/resources/registry-data-packet.nbt"));
+            this.registryDataPackBytes = Files.readAllBytes(Path.of("src/jmh/resources/sample.nbt"));
             try(var stream = new FastByteArrayOutputStream()) {
                 try(var gzipStream = new GZIPOutputStream(stream)) {
                     gzipStream.write(registryDataPackBytes);
@@ -38,7 +38,7 @@ public class DeserializerBenchmark {
     }
 
     @Benchmark
-    public RootCompound hopeNbt(DesState state) {
+    public NbtRootCompound hopeNbt(DesState state) {
         return NbtDeserializer.deserialize(new FastByteArrayInputStream(state.registryDataPackBytes), Mode.FILE);
     }
 

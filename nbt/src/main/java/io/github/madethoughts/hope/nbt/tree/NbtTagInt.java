@@ -1,6 +1,11 @@
 package io.github.madethoughts.hope.nbt.tree;
 
-public record NbtTagInt(
-        int value
-) implements NbtTag {
+import io.github.madethoughts.hope.nbt.internal.tree.NbtTagIntImpl;
+
+public sealed interface NbtTagInt extends NbtTag permits NbtTagIntImpl {
+    static NbtTagInt intTag(int val) {
+        return new NbtTagIntImpl(val);
+    }
+
+    int value();
 }
